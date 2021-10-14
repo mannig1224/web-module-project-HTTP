@@ -3,9 +3,28 @@ import { Link, useParams, useHistory } from 'react-router-dom';
 
 import axios from 'axios';
 
+
+// Alert box for deleting
+const Modal = ( props )=> {
+    const handleYes = ()=> {
+      props.yesFunction();
+    }
+  
+    const handleNo = ()=> {
+      props.noFunction();
+    }
+  
+    return<div id="Modal">
+      <h1>{props.title}</h1>
+      <button onClick={handleYes}>{props.yesText}</button>
+      <button onClick={handleNo}>{props.noText}</button>
+    </div>
+  }
+
+// movie component
 const Movie = (props) => {
     const { addToFavorites } = props;
-
+    const [displayModal, setDisplayModal] = useState(false);
     const [movie, setMovie] = useState('');
 
     const { id } = useParams();
@@ -20,6 +39,29 @@ const Movie = (props) => {
                 console.log(err.response);
             })
     }, [id]);
+
+    //TO DELETE:
+  
+  const handleDelete = ()=> {
+    setDisplayModal(true);
+  }
+
+  const yesFunction = ()=> {
+    axios.delete(`http://localhost:5000/api/movies/${id}`)
+      .then(resp=> {
+        props.deleteMovie(id);
+        setDisplayModal(false);
+        push(`/item-list`);
+      })
+      .catch(err=> {
+        console.log(err);
+      })
+  }
+
+  const noFunction = ()=> {
+    setDisplayModal(false);
+  }
+
 
     return(<div className="modal-page col">
         <div className="modal-dialog">
@@ -52,7 +94,13 @@ const Movie = (props) => {
                         <section>
                             <span className="m-2 btn btn-dark">Favorite</span>
                             <Link to={`/movies/edit/${movie.id}`} className="m-2 btn btn-success">Edit</Link>
-                            <span className="delete"><input type="button" className="m-2 btn btn-danger" value="Delete"/></span>
+                            <span className="delete">
+                                <input type="button" className="m-2 btn btn-danger" value="Delete" onClick={handleDelete}/>
+                                {
+                                    displayModal && <Modal title={`Are you sure you want to delete ${movie.title}?`} yesText="DO IT NOW" noText="I CHANGED MY MIND." yesFunction={yesFunction} noFunction={noFunction}/>
+                                }
+                            </span>
+
                         </section>
                     </div>
                 </div>
